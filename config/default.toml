@@ -1,0 +1,42 @@
+[general]
+log_level = "info"
+data_dir = "/var/lib/rust-edr"
+rules_dir = "/etc/rust-edr/rules"
+
+[monitoring]
+process_enabled = true
+file_enabled = true
+network_enabled = true
+memory_enabled = false
+
+[file_monitor]
+watch_paths = [
+    "/etc",
+    "/usr/bin",
+    "/usr/sbin",
+    "/home",
+]
+exclude_paths = [
+    "/home/*/.cache",
+    "/tmp",
+]
+
+[network_monitor]
+capture_interface = "any"
+monitor_dns = true
+monitor_http = true
+
+[detection]
+rule_engine = "behavioral"
+threat_threshold = 7.0
+auto_response = false
+
+[response]
+kill_process = false
+isolate_network = false
+alert_only = true
+
+[storage]
+backend = "sled"
+retention_days = 30
+max_size_gb = 10

@@ -1,0 +1,74 @@
+[package]
+name = "rust-edr"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+description = "A lightweight Endpoint Detection and Response (EDR) system for Linux"
+license = "MIT"
+repository = "https://github.com/yourusername/rust-edr"
+
+[[bin]]
+name = "rust-edr"
+path = "src/main.rs"
+
+[dependencies]
+# CLI Framework
+clap = { version = "4.5", features = ["derive", "cargo"] }
+
+# Async Runtime
+tokio = { version = "1.37", features = ["full"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+slog = "2.7"
+slog-json = "2.6"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# File System Monitoring
+notify = "6.1"
+inotify = "0.10"
+
+# Process Monitoring
+procfs = "0.16"
+sysinfo = "0.30"
+
+# Network Monitoring
+nix = { version = "0.28", features = ["net", "socket"] }
+libc = "0.2"
+
+# eBPF Support (Optional but powerful)
+aya = { version = "0.12", optional = true }
+aya-log = { version = "0.2", optional = true }
+
+# Configuration
+config = "0.14"
+toml = "0.8"
+
+# Error Handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Time
+chrono = "0.4"
+
+# Database/Storage (for event logging)
+sled = "0.34"
+rusqlite = { version = "0.31", features = ["bundled"] }
+
+[dev-dependencies]
+tempfile = "3.10"
+criterion = "0.5"
+
+[features]
+default = ["ebpf"]
+ebpf = ["aya", "aya-log"]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
