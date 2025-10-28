@@ -49,6 +49,13 @@ uuid = { version = "1.8", features = ["v4"] }
 # Database/Storage (for event logging)
 sled = "0.34"
 
+# Compression
+flate2 = "1.0"
+tar = "0.4"
+
+# Filesystem operations
+walkdir = "2.5"
+
 # Configuration
 toml = "0.8"
 

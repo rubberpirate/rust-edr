@@ -3,6 +3,7 @@ mod monitors;
 mod detection;
 mod response;
 mod telemetry;
+mod forensics;
 
 use clap::{Parser, Subcommand};
 use anyhow::Result;
@@ -61,6 +62,47 @@ enum Commands {
         /// Show current configuration
         #[arg(short, long)]
         show: bool,
+    },
+    /// Forensics tools
+    Forensics {
+        #[command(subcommand)]
+        action: ForensicsAction,
+    },
+}
+
+#[derive(Subcommand)]
+enum ForensicsAction {
+    /// Archive threat logs
+    Archive {
+        /// Threat ID to archive
+        threat_id: String,
+    },
+    /// List all archives
+    List,
+    /// Extract an archive
+    Extract {
+        /// Archive file path
+        archive: String,
+        /// Extract to directory
+        #[arg(short, long)]
+        output: String,
+    },
+    /// Compress old logs
+    Compress {
+        /// Days old to compress
+        #[arg(short, long, default_value = "7")]
+        days: u64,
+    },
+    /// Cleanup old archives
+    Cleanup {
+        /// Keep archives newer than days
+        #[arg(short, long, default_value = "90")]
+        days: u64,
+    },
+    /// Capture system snapshot
+    Snapshot {
+        /// Threat ID
+        threat_id: String,
     },
 }
 
@@ -237,6 +279,68 @@ async fn main() -> Result<()> {
                 println!("  Config file: /etc/rust-edr/config.toml");
                 println!("  Data dir: /var/lib/rust-edr");
                 println!("  Log dir: /var/log/rust-edr");
+            }
+        }
+        Commands::Forensics { action } => {
+            use forensics::{ForensicArchiver, ForensicSnapshot};
+            use std::path::Path;
+
+            let archiver = ForensicArchiver::new("/var/log/rust-edr");
+            archiver.init()?;
+
+            match action {
+                ForensicsAction::Archive { threat_id } => {
+                    println!("📦 Archiving threat: {}", threat_id);
+                    
+                    // Find related log files
+                    let log_files = vec![
+                        PathBuf::from(format!("/var/log/rust-edr/threats_{}.jsonl", threat_id)),
+                        PathBuf::from(format!("/var/log/rust-edr/events_{}.jsonl", threat_id)),
+                    ];
+                    
+                    archiver.archive_threat_session(&threat_id, log_files)?;
+                }
+                ForensicsAction::List => {
+                    println!("📚 Available Archives:\n");
+                    let archives = archiver.list_archives()?;
+                    
+                    if archives.is_empty() {
+                        println!("No archives found");
+                    } else {
+                        for archive in archives {
+                            println!("  📦 {}", archive);
+                        }
+                    }
+                }
+                ForensicsAction::Extract { archive, output } => {
+                    println!("📤 Extracting archive...");
+                    archiver.extract_archive(
+                        Path::new(&archive),
+                        Path::new(&output)
+                    )?;
+                }
+                ForensicsAction::Compress { days } => {
+                    println!("🗜️  Compressing logs older than {} days", days);
+                    let compressed = archiver.compress_old_logs(days)?;
+                    println!("✅ Compressed {} files", compressed.len());
+                }
+                ForensicsAction::Cleanup { days } => {
+                    println!("🧹 Cleaning up archives older than {} days", days);
+                    let removed = archiver.cleanup_old_archives()?;
+                    println!("✅ Removed {} archives", removed);
+                }
+                ForensicsAction::Snapshot { threat_id } => {
+                    println!("📸 Capturing forensic snapshot for threat: {}", threat_id);
+                    let snapshot = ForensicSnapshot::capture(&threat_id)?;
+                    
+                    let snapshot_path = PathBuf::from(format!(
+                        "/var/log/rust-edr/archives/snapshots/snapshot_{}",
+                        threat_id
+                    ));
+                    
+                    snapshot.save(&snapshot_path)?;
+                    println!("✅ Snapshot saved");
+                }
             }
         }
     }

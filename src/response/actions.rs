@@ -2,9 +2,12 @@
 // Execute response actions: block, allow, quarantine, alert, kill
 
 use crate::types::{Threat, ResponseAction, Severity};
+use crate::forensics::snapshot::ForensicSnapshot;
+use crate::forensics::shell_spawner::create_investigation_artifact;
 use anyhow::Result;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 use tokio::sync::mpsc;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -79,6 +82,11 @@ impl ResponseEngine {
 
     /// Alert on threat (always executed)
     async fn alert(&self, threat: &Threat) -> ResponseResult {
+        // Capture forensic snapshot for high-severity threats
+        if matches!(threat.severity, Severity::High | Severity::Critical) {
+            self.capture_forensics(threat).await;
+        }
+
         ResponseResult {
             action: ResponseAction::Alert,
             success: true,
@@ -88,6 +96,37 @@ impl ResponseEngine {
             ),
             timestamp: Utc::now(),
         }
+    }
+
+    /// Capture forensic data for investigation
+    async fn capture_forensics(&self, threat: &Threat) {
+        let threat_clone = threat.clone();
+        
+        tokio::spawn(async move {
+            // Create session directory
+            let session_dir = PathBuf::from(format!(
+                "/var/log/rust-edr/archives/sessions/investigation_{}",
+                threat_clone.id
+            ));
+
+            // Capture snapshot
+            if let Ok(snapshot) = ForensicSnapshot::capture(&threat_clone.id) {
+                let snapshot_path = session_dir.join("snapshot");
+                if let Err(e) = snapshot.save(&snapshot_path) {
+                    eprintln!("Failed to save snapshot: {}", e);
+                } else {
+                    println!("📸 Forensic snapshot captured for threat: {}", threat_clone.id);
+                }
+            }
+
+            // Create investigation shell artifact
+            if let Err(e) = create_investigation_artifact(&threat_clone, &session_dir) {
+                eprintln!("Failed to create investigation artifact: {}", e);
+            } else {
+                println!("🐚 Investigation shell created: {}/investigate.sh", session_dir.display());
+                println!("   Run with: bash {}/investigate.sh", session_dir.display());
+            }
+        });
     }
 
     /// Block threat (prevent execution/connection)

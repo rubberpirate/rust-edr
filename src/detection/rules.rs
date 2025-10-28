@@ -76,7 +76,28 @@ impl RuleEngine {
                 }
                 
                 if rule.id == "root_process_spawn" {
-                    return proc_event.uid == 0 && proc_event.ppid.is_some();
+                    // Only flag if:
+                    // 1. Running as root (uid 0)
+                    // 2. Parent is NOT init/systemd (ppid != 1)
+                    // 3. Process name is suspicious or from unusual location
+                    if proc_event.uid == 0 {
+                        let suspicious_names = vec!["nc", "ncat", "bash", "sh", "python", "perl", "ruby"];
+                        let name_lower = proc_event.name.to_lowercase();
+                        
+                        // Check if process name is suspicious
+                        let is_suspicious_name = suspicious_names.iter().any(|s| name_lower.contains(s));
+                        
+                        // Check if running from suspicious location
+                        let cmdline_str = proc_event.cmdline.join(" ");
+                        let is_suspicious_location = cmdline_str.contains("/tmp/") || 
+                                                      cmdline_str.contains("/dev/shm/") ||
+                                                      cmdline_str.contains("/var/tmp/");
+                        
+                        // Only alert if suspicious AND parent is not init/systemd
+                        return (is_suspicious_name || is_suspicious_location) && 
+                               proc_event.ppid != Some(1);
+                    }
+                    return false;
                 }
 
                 if rule.id == "suspicious_cmdline" {
@@ -227,9 +248,9 @@ impl RuleEngine {
 
         self.rules.push(BehavioralRule {
             id: "root_process_spawn".to_string(),
-            name: "Root Process Spawned".to_string(),
-            description: "Detects new processes running as root".to_string(),
-            severity: Severity::Medium,
+            name: "Suspicious Root Process".to_string(),
+            description: "Detects suspicious processes running as root (shells, scripts from /tmp)".to_string(),
+            severity: Severity::High,
             enabled: true,
             conditions: vec![],
         });

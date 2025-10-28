@@ -1,6 +1,6 @@
 # Rust EDR - Linux Endpoint Detection and Response System
 
-A lightweight, high-performance Endpoint Detection and Response (EDR) system built in Rust for Linux systems. This EDR provides real-time monitoring, threat detection, and automated response capabilities through a CLI interface.
+A lightweight, high-performance Endpoint Detection and Response (EDR) system built in Rust for Linux systems. This EDR provides real-time monitoring, threat detection, automated response capabilities, and **comprehensive forensics tools** through a CLI interface.
 
 ## 📋 Table of Contents
 
@@ -11,6 +11,7 @@ A lightweight, high-performance Endpoint Detection and Response (EDR) system bui
 - [Installation](#installation)
 - [Usage](#usage)
 - [Configuration](#configuration)
+- [🆕 Forensics & Investigation](#forensics--investigation)
 
 ---
 
@@ -26,6 +27,16 @@ A lightweight, high-performance Endpoint Detection and Response (EDR) system bui
 6. **Logging System** - Structured event logging
 7. **Response Engine** - Automated threat response
 8. **Management Interface** - CLI for configuration and monitoring
+
+### 🆕 Forensics & Investigation Features
+
+9. **Automatic Snapshot Capture** - Capture system state on threat detection (processes, network, memory, files)
+10. **Investigation Shells** - Interactive forensic shells for each detected threat
+11. **Log Compression & Archiving** - Automatic compression and retention management
+12. **Forensics CLI Tools** - Archive, extract, compress, and analyze threat data
+13. **Evidence Chain** - Complete audit trail for compliance and incident response
+
+**[→ See FORENSICS_GUIDE.md for complete documentation](FORENSICS_GUIDE.md)**
 
 ---
 
