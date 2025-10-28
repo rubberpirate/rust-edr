@@ -1,6 +1,8 @@
 # Rust EDR
 
-/target/
+# Rust build artifacts (all target directories)
+target/
+**/target/
 Cargo.lock
 *.pdb
 *.exe
