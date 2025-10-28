@@ -1,0 +1,1 @@
+/home/rubberpirate/rust-edr/edr-dashboard/target/release/edr-agent: /home/rubberpirate/rust-edr/edr-dashboard/agent/main.rs /home/rubberpirate/rust-edr/edr-dashboard/src/lib.rs /home/rubberpirate/rust-edr/edr-dashboard/src/types.rs

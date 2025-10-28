@@ -1,0 +1,1 @@
+/home/rubberpirate/rust-edr/edr-dashboard/target/release/edr-server: /home/rubberpirate/rust-edr/edr-dashboard/server/main.rs /home/rubberpirate/rust-edr/edr-dashboard/server/tui.rs /home/rubberpirate/rust-edr/edr-dashboard/src/lib.rs /home/rubberpirate/rust-edr/edr-dashboard/src/types.rs
